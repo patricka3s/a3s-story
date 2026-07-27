@@ -127,6 +127,16 @@
   .ty-contact{margin-top:22px;font-size:14px;letter-spacing:.03em}
   .paper .ty-contact{color:#5c6b62}
 
+  /* closing-slide photo backdrop (Option A) */
+  .slide.final-photo{overflow:hidden}
+  .carousel{position:absolute;inset:0;z-index:0}
+  .carousel img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.2s ease}
+  .carousel img.on{opacity:1}
+  .carousel-scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(2,54,72,.88) 0%,rgba(2,54,72,.68) 52%,rgba(2,54,72,.5) 100%)}
+  .final-photo .inner{position:relative;z-index:2}
+  .navy .invite-cta{color:var(--cream)}
+  .final-photo .ty-contact{color:rgba(255,255,255,.85)}
+
   .nav{position:fixed;bottom:18px;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:center;gap:20px;pointer-events:none}
   body.scroll-mode .nav{display:none}
   .arrow{pointer-events:auto;width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,.18);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:background .15s,color .15s}
@@ -444,11 +454,13 @@
     </div>
   </section>
 
-  <!-- 17 ASK + QR + LOGO (paper + wlogo) -->
-  <section class="slide paper">
+  <!-- 17 ASK + QR + LOGO (photo backdrop) -->
+  <section class="slide navy final-photo">
+    <div class="carousel" id="carousel"></div>
+    <div class="carousel-scrim"></div>
     <div class="inner split">
       <div>
-        <img class="final-logo anim" src="assets/a3s-wlogo-tall-transparent-bg.png" alt="Advance Three Spaces">
+        <img class="final-logo anim" src="assets/a3s-blogo-tall-transparent-bg.png" alt="Advance Three Spaces">
         <h2 class="anim d1">Help us open the doors.</h2>
         <p class="invite-cta detail">Help us give this community a home — so no one has to end up alone in that room.</p>
         <div class="ty-contact anim d3">Patrick Quinlan &nbsp;·&nbsp; [your email] &nbsp;·&nbsp; Pasco County, Florida</div>
@@ -480,8 +492,8 @@
   const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let idx=0;
 
-  const MOODS=['#023648','#023648','#023648','#F7F3EA','#A58461','#077990','#023648','#F7F3EA','#023648','#F7F3EA','#077990','#F7F3EA','#A58461','#023648','#077990','#023648','#F7F3EA'];
-  const LIGHT =[false,false,false,true,false,false,false,true,false,true,false,true,false,false,false,false,true];
+  const MOODS=['#023648','#023648','#023648','#F7F3EA','#A58461','#077990','#023648','#F7F3EA','#023648','#F7F3EA','#077990','#F7F3EA','#A58461','#023648','#077990','#023648','#023648'];
+  const LIGHT =[false,false,false,true,false,false,false,true,false,true,false,true,false,false,false,false,false];
   const CONN  =[0.40,0.05,0.04,0.12,0.25,0.50,0.30,0.45,0.60,0.70,0.85,0.90,0.92,0.94,0.97,0.98,1.00];
 
   // show/hide slides per config.js (a missing/false-less config shows everything)
@@ -559,6 +571,32 @@
   }
   window.addEventListener('resize',()=>{resize();seed();});
   resize(); seed(); frame();
+
+  /* ---- closing-slide photo carousel (crossfading backdrop) ---- */
+  (function initCarousel(){
+    const wrap=document.getElementById('carousel'); if(!wrap)return;
+    const list=(Array.isArray(window.CAROUSEL)&&window.CAROUSEL.length)?window.CAROUSEL:null;
+    const srcs=list?list.map(s=>'photos/'+s):Array.from({length:40},(_,i)=>'photos/carousel-'+(i+1)+'.jpg');
+    let shownFirst=false;
+    srcs.forEach(src=>{
+      const im=document.createElement('img'); im.src=src; im.alt='';
+      im.onload=()=>{ if(!shownFirst){im.classList.add('on');shownFirst=true;} };
+      im.onerror=()=>{ im.remove(); };
+      wrap.appendChild(im);
+    });
+    if(reduce)return;
+    let paused=false, ci=0;
+    const slide=wrap.closest('.slide');
+    if(slide){ slide.addEventListener('mouseenter',()=>paused=true); slide.addEventListener('mouseleave',()=>paused=false); }
+    setInterval(()=>{
+      if(paused)return;
+      const kids=[...wrap.querySelectorAll('img')];
+      if(kids.length<2)return;
+      kids.forEach(k=>k.classList.remove('on'));
+      ci=(ci+1)%kids.length; kids[ci].classList.add('on');
+    },4200);
+  })();
+
   render();
 </script>
 </body>

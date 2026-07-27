@@ -1,10 +1,8 @@
 /* ============================================================
-   A3S PITCH — SLIDE CONFIG
-   Set any slide to false to hide it from the presentation.
-   Save this file and refresh the page. Slide numbers follow
-   the deck order. (Deleting or emptying this file shows all.)
+   A3S PITCH — CONFIG
    ============================================================ */
 
+/* --- SLIDES: set any to false to hide it. Numbers follow deck order. --- */
 window.SLIDE_CONFIG = {
   1:  true,   // Title — "Find your tribe."
   2:  true,   // My father / the TV
@@ -22,5 +20,20 @@ window.SLIDE_CONFIG = {
   14: true,   // The Stage
   15: true,   // The Game Library
   16: true,   // A place for those who feel disconnected
-  17: true,   // The ask + QR code
+  17: true,   // The ask + QR code (photo backdrop)
 };
+
+/* --- CLOSING-SLIDE PHOTO BACKDROP ---------------------------------------
+   Photos crossfade behind the final ask.
+
+   EASIEST WAY: name your photos  carousel-1.jpg, carousel-2.jpg, ...  and
+   put them in the /photos folder. Leave the list below EMPTY and they'll
+   be picked up automatically (up to 40; gaps are fine).
+
+   OR: list exact filenames here to control the order or use other names.
+   Example:
+     window.CAROUSEL = ["gamenight-1.jpg", "market-day.jpg", "cassie.jpg"];
+------------------------------------------------------------------------- */
+window.CAROUSEL = [
+  // leave empty to auto-load carousel-1.jpg, carousel-2.jpg, ...
+];
