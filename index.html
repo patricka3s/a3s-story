@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advance Three Spaces — The Park</title>
+<style>
+  :root{
+    --teal:#077990; --brown:#A58461; --sand:#DDCEA5; --navy:#023648;
+    --paper:#F7F3EA; --cream:#FAF6EC;
+    --display:'Trebuchet MS','Segoe UI',system-ui,-apple-system,sans-serif;
+    --body:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--body);background:var(--navy);color:var(--navy);overflow:hidden}
+  body.scroll-mode{overflow:auto}
+
+  #bg{position:fixed;inset:0;z-index:0;background:var(--navy);transition:background-color .55s ease}
+  #net{position:fixed;inset:0;z-index:1;pointer-events:none}
+  body.scroll-mode #bg,body.scroll-mode #net{display:none}
+
+  .topbar{position:fixed;top:0;left:0;right:0;height:56px;z-index:40;display:flex;align-items:center;
+    justify-content:space-between;padding:0 20px;pointer-events:none}
+  .brandmark{display:flex;align-items:center;gap:10px;pointer-events:auto}
+  .brandmark img{height:30px;width:auto}
+  .brandmark span{font-family:var(--display);font-weight:bold;font-size:15px;letter-spacing:.02em;color:var(--cream);text-shadow:0 1px 3px rgba(0,0,0,.35);transition:color .3s}
+  .modetoggle{pointer-events:auto;font-family:var(--body);font-size:12.5px;font-weight:600;
+    border:1.5px solid rgba(255,255,255,.4);color:var(--cream);background:rgba(0,0,0,.18);
+    border-radius:999px;padding:7px 14px;cursor:pointer;transition:all .2s;backdrop-filter:blur(4px)}
+  .modetoggle:hover{background:var(--teal);border-color:var(--teal);color:#fff}
+
+  .deck{width:100%;height:100vh;position:relative;z-index:2}
+  body.scroll-mode .deck{height:auto}
+  .slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+    padding:88px 7vw 92px;opacity:0;pointer-events:none;transition:opacity .55s ease;overflow:hidden}
+  .slide.active{opacity:1;pointer-events:auto}
+  body.scroll-mode .slide{position:relative;inset:auto;min-height:100vh;opacity:1;pointer-events:auto;border-bottom:1px solid rgba(0,0,0,.08)}
+  .slide.navy{color:var(--cream)} .slide.paper{color:var(--navy)}
+  .slide.teal{color:var(--cream)} .slide.brown{color:var(--cream)}
+  body.scroll-mode .slide.navy{background:var(--navy)}
+  body.scroll-mode .slide.paper{background:var(--paper)}
+  body.scroll-mode .slide.teal{background:var(--teal)}
+  body.scroll-mode .slide.brown{background:var(--brown)}
+
+  /* dual density: detail hidden in slide mode, shown in scroll */
+  .detail{display:none}
+  body.scroll-mode .detail{display:block}
+  body.scroll-mode .chips.detail{display:flex}
+  body.scroll-mode .stat.detail{display:flex}
+
+  .anim{opacity:0;transform:translateY(22px)}
+  .slide.active .anim{opacity:1;transform:none;transition:opacity .6s ease,transform .6s ease}
+  .slide.active .anim.d1{transition-delay:.12s}
+  .slide.active .anim.d2{transition-delay:.26s}
+  .slide.active .anim.d3{transition-delay:.40s}
+  .slide.active .anim.d4{transition-delay:.54s}
+  body.scroll-mode .anim{opacity:1;transform:none}
+
+  .inner{max-width:1000px;margin:0 auto;width:100%;position:relative}
+  .eyebrow{font-family:var(--display);font-weight:bold;font-size:clamp(13px,1.6vw,16px);letter-spacing:.16em;text-transform:uppercase;margin-bottom:20px}
+  .navy .eyebrow,.teal .eyebrow,.brown .eyebrow{color:var(--sand)}
+  .paper .eyebrow{color:var(--teal)}
+  h2{font-family:var(--display);font-weight:bold;line-height:1.08;letter-spacing:-.01em;font-size:clamp(30px,5.2vw,58px)}
+  .lede{font-size:clamp(17px,2.3vw,23px);line-height:1.5;margin-top:22px;max-width:48ch}
+  .navy .lede,.teal .lede,.brown .lede{color:rgba(255,255,255,.92)}
+  .paper .lede{color:#40514a}
+
+  .spare h2{font-size:clamp(34px,5.8vw,66px);max-width:20ch}
+  .fear-line{font-family:var(--display);font-weight:bold;font-size:clamp(40px,7.4vw,84px);line-height:1.05;letter-spacing:-.015em;color:var(--cream)}
+
+  .title-slide{align-items:center;text-align:center}
+  .title-logo{height:min(46vh,360px);width:auto;margin-bottom:8px}
+  .title-tag{font-family:var(--display);font-weight:bold;font-size:clamp(22px,3.4vw,34px);color:var(--sand);margin-top:6px}
+  .title-sub{margin-top:26px;font-size:15px;letter-spacing:.04em;color:rgba(255,255,255,.7)}
+
+  .split{display:grid;grid-template-columns:1.05fr .95fr;gap:5vw;align-items:center}
+  .quote-hero{font-family:var(--display);font-weight:bold;font-size:clamp(34px,5.2vw,64px);line-height:1.1;letter-spacing:-.01em}
+
+  .photo{position:relative;width:100%;aspect-ratio:4/3;border-radius:16px;overflow:hidden;
+    background:linear-gradient(135deg,var(--brown),var(--teal));box-shadow:0 18px 40px rgba(0,0,0,.28)}
+  .photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .photo .ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:rgba(255,255,255,.92);padding:16px;gap:6px;font-size:14px}
+  .photo .ph b{font-size:15px} .photo .ph .ico{font-size:30px;opacity:.85}
+
+  .motif{display:flex;align-items:center;justify-content:center}
+  .motif svg{width:100%;max-width:460px;height:auto}
+
+  .chips{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+  .chip{background:rgba(7,121,144,.10);border:1.5px solid var(--teal);color:var(--navy);border-radius:999px;padding:12px 20px;font-size:clamp(15px,2vw,19px);font-weight:600}
+  .chip b{color:var(--teal)}
+
+  .stats{display:flex;flex-direction:column;gap:18px;margin-top:24px}
+  .stat{display:flex;align-items:baseline;gap:18px}
+  .stat .n{font-family:var(--display);font-weight:bold;font-size:clamp(32px,4.6vw,50px);color:var(--sand);line-height:1;min-width:2.6ch}
+  .stat .l{font-size:clamp(15px,1.9vw,19px);color:rgba(255,255,255,.9)}
+
+  .picto{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px}
+  .picto i{width:clamp(26px,3.4vw,38px);height:clamp(26px,3.4vw,38px);border-radius:50%;border:2.5px solid var(--sand);opacity:.55}
+  .picto i.on{background:var(--sand);opacity:1}
+  .slide.active .picto i{animation:pop .7s backwards}
+  .slide.active .picto i:nth-child(1){animation-delay:.45s}.slide.active .picto i:nth-child(2){animation-delay:.60s}
+  .slide.active .picto i:nth-child(3){animation-delay:.75s}.slide.active .picto i:nth-child(4){animation-delay:.90s}
+  .slide.active .picto i:nth-child(5){animation-delay:1.05s}.slide.active .picto i:nth-child(6){animation-delay:1.20s}
+  .slide.active .picto i:nth-child(7){animation-delay:1.35s}.slide.active .picto i:nth-child(8){animation-delay:1.50s}
+  .slide.active .picto i:nth-child(9){animation-delay:1.65s}.slide.active .picto i:nth-child(10){animation-delay:1.80s}
+  @keyframes pop{from{transform:scale(0);opacity:0}}
+  .picto-cap{font-size:clamp(16px,2.1vw,21px);margin-top:18px;color:rgba(255,255,255,.92)}
+  .picto-cap b{color:var(--sand)}
+
+  .gallery{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px}
+  .gallery .photo{aspect-ratio:1/1;border-radius:12px}
+  .gallery .photo:first-child{grid-column:1/3;aspect-ratio:2/1}
+
+  .tags{margin-top:26px;font-family:var(--display);font-weight:bold;font-size:clamp(15px,2vw,20px);color:var(--sand);letter-spacing:.02em}
+
+  .invite-cta{margin-top:24px;font-family:var(--display);font-weight:bold;font-size:clamp(19px,2.5vw,28px);line-height:1.22}
+  .teal .invite-cta{color:var(--cream)} .paper .invite-cta{color:var(--navy)}
+
+  .final-logo{height:min(20vh,150px);width:auto;margin-bottom:14px}
+  .qr-card{display:flex;flex-direction:column;text-align:center;align-items:center;gap:12px;
+    background:#fff;border:1px solid rgba(2,54,72,.10);border-radius:18px;padding:20px;box-shadow:0 14px 34px rgba(0,0,0,.20)}
+  .qr{width:150px;height:150px;background:#fff;border-radius:10px;padding:6px}
+  .qr svg{width:100%;height:100%;display:block}
+  .qr-label .give{font-family:var(--display);font-weight:bold;font-size:21px;color:var(--navy);line-height:1.1}
+  .qr-label .url{font-size:13px;color:var(--teal);margin-top:5px;word-break:break-all}
+  .ty-contact{margin-top:22px;font-size:14px;letter-spacing:.03em}
+  .paper .ty-contact{color:#5c6b62}
+
+  .nav{position:fixed;bottom:18px;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:center;gap:20px;pointer-events:none}
+  body.scroll-mode .nav{display:none}
+  .arrow{pointer-events:auto;width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,.18);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:background .15s,color .15s}
+  .arrow:hover{background:var(--teal);color:#fff}
+  .dots{pointer-events:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:60vw;justify-content:center}
+  .dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;transition:all .2s}
+  .dot.on{background:var(--sand);transform:scale(1.35)}
+  .counter{position:fixed;bottom:26px;right:22px;z-index:40;font-size:12.5px;color:rgba(255,255,255,.55);font-variant-numeric:tabular-nums;pointer-events:none;transition:color .3s}
+  body.scroll-mode .counter{display:none}
+  .hint{position:fixed;bottom:70px;left:0;right:0;text-align:center;font-size:12px;color:rgba(255,255,255,.4);z-index:40;pointer-events:none;transition:opacity .5s}
+
+  body.on-light .arrow{background:rgba(2,54,72,.14);color:var(--navy)}
+  body.on-light .arrow:hover{background:var(--teal);color:#fff}
+  body.on-light .dot{background:rgba(2,54,72,.3)}
+  body.on-light .dot.on{background:var(--teal)}
+  body.on-light .counter{color:rgba(2,54,72,.6)}
+  body.on-light .hint{color:rgba(2,54,72,.5)}
+  body.on-light .brandmark span{color:var(--navy);text-shadow:none}
+  body.on-light .modetoggle{color:var(--navy);border-color:rgba(2,54,72,.35);background:rgba(255,255,255,.5)}
+
+  @media(max-width:760px){
+    .slide{padding:74px 7vw 96px}
+    .split{grid-template-columns:1fr;gap:26px}
+    .split .photo,.split .motif{max-width:400px}
+    .motif{order:-1}
+  }
+  @media(prefers-reduced-motion:reduce){.slide,.anim,.picto i{transition:none!important;animation:none!important}.anim{opacity:1!important;transform:none!important}.picto i{opacity:1}}
+</style>
+</head>
+<body class="slides-mode">
+
+<div id="bg"></div>
+<canvas id="net"></canvas>
+
+<div class="topbar">
+  <div class="brandmark"><img src="assets/a3s-die.png" alt="A3S"><span>Advance Three Spaces</span></div>
+  <button class="modetoggle" id="modetoggle">⇅ Scroll view</button>
+</div>
+
+<div class="deck" id="deck">
+
+  <!-- 1 TITLE -->
+  <section class="slide navy title-slide active">
+    <img class="title-logo" src="assets/a3s-blogo-tall-transparent-bg.png" alt="Advance Three Spaces">
+    <div class="title-tag anim d1">Find your tribe.</div>
+    <div class="title-sub anim d2">A vision for connection in Pasco County &nbsp;·&nbsp; Patrick Quinlan, Executive Director</div>
+  </section>
+
+  <!-- 2 FATHER -->
+  <section class="slide navy">
+    <div class="inner split">
+      <div>
+        <h2 class="anim">My father spent his last decades<br>watching TV.</h2>
+        <p class="lede detail">He let his friendships fall away until there was almost no one left — my mother, the television, and a drink. His whole world shrank to one room.</p>
+      </div>
+      <div class="motif anim d2">
+        <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g stroke="#FAF6EC" stroke-width="4" stroke-linecap="round"><line x1="205" y1="122" x2="162" y2="70"/><line x1="205" y1="122" x2="252" y2="64"/></g>
+          <circle cx="162" cy="70" r="6" fill="#FAF6EC"/><circle cx="252" cy="64" r="6" fill="#FAF6EC"/>
+          <rect x="126" y="122" width="206" height="140" rx="16" fill="#A58461"/>
+          <rect x="144" y="140" width="150" height="104" rx="8" fill="#DDCEA5"/>
+          <g stroke="#A58461" stroke-width="5" opacity="0.55" stroke-linecap="round"><line x1="158" y1="168" x2="280" y2="168"/><line x1="158" y1="192" x2="250" y2="192"/><line x1="158" y1="216" x2="280" y2="216"/></g>
+          <circle cx="312" cy="162" r="7" fill="#023648"/><circle cx="312" cy="188" r="7" fill="#023648"/>
+          <line x1="156" y1="262" x2="144" y2="282" stroke="#A58461" stroke-width="7" stroke-linecap="round"/>
+          <line x1="300" y1="262" x2="312" y2="282" stroke="#A58461" stroke-width="7" stroke-linecap="round"/>
+          <g fill="#0E4257"><circle cx="70" cy="236" r="21"/><path d="M38 288 q32 -40 64 0 z"/></g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 FEAR -->
+  <section class="slide navy spare">
+    <div class="inner">
+      <p class="fear-line anim">I could see myself<br>becoming him.</p>
+      <p class="lede detail">When he died, I grieved him — but I felt something else, too. I could see exactly how a person ends up in that room, and how easily it could be me.</p>
+    </div>
+  </section>
+
+  <!-- 4 RECKONING -->
+  <section class="slide paper">
+    <div class="inner split">
+      <div>
+        <h2 class="anim">At 42, I was diagnosed<br>as autistic.</h2>
+        <p class="lede detail">Suddenly my whole life made sense — why I'd always stood at the edge of every room. I'd worked from home for nearly twenty years. I had a family I loved, and not one friend who was truly my own.</p>
+      </div>
+      <div class="photo anim d3">
+        <img src="photos/diagnosis.jpg" alt="" onerror="this.style.display='none'">
+        <div class="ph"><div class="ico">◈</div><div>Drop <b>diagnosis.jpg</b></div><div>optional — a portrait or candid of you</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 EXCUSE -->
+  <section class="slide brown">
+    <div class="inner split">
+      <div>
+        <h2 class="anim">I found an excuse<br>to gather people.</h2>
+        <p class="lede detail">One morning I decided to design a board game. To learn how, I needed to play — and I needed players. So I invited over a few guys who barely knew each other. Not to help them. Because <b>I</b> was lonely, and it was the perfect excuse.</p>
+      </div>
+      <div class="motif anim d2">
+        <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="200" cy="188" rx="92" ry="48" fill="#FAF6EC"/>
+          <ellipse cx="200" cy="182" rx="92" ry="48" fill="#F1E8D5"/>
+          <g transform="rotate(-10 200 176)"><rect x="182" y="158" width="36" height="36" rx="8" fill="#077990"/><circle cx="192" cy="168" r="3.4" fill="#FAF6EC"/><circle cx="208" cy="184" r="3.4" fill="#FAF6EC"/><circle cx="200" cy="176" r="3.4" fill="#FAF6EC"/></g>
+          <g fill="#023648"><circle cx="200" cy="86" r="19"/><path d="M170 140 q30 -42 60 0 z"/></g>
+          <g fill="#077990"><circle cx="86" cy="140" r="19"/><path d="M56 194 q30 -42 60 0 z"/></g>
+          <g fill="#DDCEA5"><circle cx="314" cy="140" r="19"/><path d="M284 194 q30 -42 60 0 z"/></g>
+          <g fill="#FAF6EC"><circle cx="128" cy="238" r="19"/><path d="M98 292 q30 -42 60 0 z"/></g>
+          <g fill="#FAF6EC"><circle cx="272" cy="238" r="19"/><path d="M242 292 q30 -42 60 0 z"/></g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 QUOTE -->
+  <section class="slide teal">
+    <div class="inner split">
+      <div>
+        <div class="eyebrow anim">One of them told me afterward</div>
+        <p class="quote-hero anim d1">&ldquo;We talked about<br>something real.&rdquo;</p>
+        <p class="lede detail">A room of men who'd barely met. One board game. By the end of the night we were saying things men almost never say out loud. The game gave us permission — and I realized the thing I'd used as an excuse was the answer.</p>
+      </div>
+      <div class="photo anim d3">
+        <img src="photos/story.jpg" alt="" onerror="this.style.display='none'">
+        <div class="ph"><div class="ico">◈</div><div>Drop <b>story.jpg</b></div><div>a real game-night photo</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 SCALE -->
+  <section class="slide navy">
+    <div class="inner">
+      <div class="eyebrow anim">And I am not the only one</div>
+      <h2 class="anim d1">Loneliness is the thing<br>half the room is carrying.</h2>
+      <div class="picto anim d2"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+      <p class="picto-cap detail">About <b>half of us</b> report feeling lonely — and men are the least likely to admit it, or to act on it.</p>
+      <div class="stats"><div class="stat detail"><span class="n count" data-to="15" data-prefix="≈">≈15</span><span class="l">cigarettes a day — the mortality risk chronic isolation carries</span></div></div>
+    </div>
+  </section>
+
+  <!-- 8 NEIGHBORS -->
+  <section class="slide paper">
+    <div class="inner">
+      <div class="eyebrow anim">It's not who you'd picture</div>
+      <h2 class="anim d1">It's our neighbors.<br>It's you and me.</h2>
+      <div class="chips detail">
+        <div class="chip">The <b>family</b> that just moved in</div>
+        <div class="chip">The <b>widow</b> down the street</div>
+        <div class="chip">The <b>remote worker</b> who hasn't spoken all day</div>
+        <div class="chip">The <b>new parent</b></div>
+        <div class="chip">The <b>teenager</b> without a tribe</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 COMMUNITY EXISTS -->
+  <section class="slide navy">
+    <div class="inner split">
+      <div>
+        <h2 class="anim">The community<br>already exists.</h2>
+        <div class="stats">
+          <div class="stat anim d2"><span class="n">[X]</span><span class="l">people have already come through our game nights</span></div>
+          <div class="stat anim d3"><span class="n count" data-to="12" data-suffix="+">12+</span><span class="l">local gaming groups in the area</span></div>
+          <div class="stat anim d4"><span class="n">0</span><span class="l">of them have a place to call their own</span></div>
+        </div>
+      </div>
+      <div class="gallery anim d2">
+        <div class="photo"><img src="photos/gamenight-1.jpg" alt="" onerror="this.style.display='none'"><div class="ph"><b>gamenight-1.jpg</b></div></div>
+        <div class="photo"><img src="photos/gamenight-2.jpg" alt="" onerror="this.style.display='none'"><div class="ph"><b>gamenight-2.jpg</b></div></div>
+        <div class="photo"><img src="photos/gamenight-3.jpg" alt="" onerror="this.style.display='none'"><div class="ph"><b>gamenight-3.jpg</b></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 IT JUST NEEDS A HOME -->
+  <section class="slide paper">
+    <div class="inner split">
+      <div>
+        <h2 class="anim">It just needs a home.</h2>
+        <p class="lede detail">Today that community meets in borrowed rooms — a coffee shop here, a library there, packed up at the end of every night. Imagine what it becomes with a place of its own.</p>
+      </div>
+      <div class="motif anim d2">
+        <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M104 152 L200 80 L296 152 Z" fill="#077990"/>
+          <rect x="246" y="102" width="20" height="36" fill="#A58461"/>
+          <path d="M256 98 q13 -11 0 -24 q-13 -11 0 -24" fill="none" stroke="#A58461" stroke-width="4" opacity="0.55" stroke-linecap="round"/>
+          <rect x="126" y="152" width="148" height="104" fill="#FAF6EC" stroke="#023648" stroke-width="4"/>
+          <rect x="181" y="198" width="40" height="58" rx="4" fill="#A58461"/>
+          <circle cx="212" cy="228" r="3.6" fill="#023648"/>
+          <rect x="144" y="172" width="32" height="32" rx="3" fill="#DDCEA5" stroke="#023648" stroke-width="2.6"/>
+          <g fill="#077990"><circle cx="155" cy="185" r="5"/><circle cx="165" cy="185" r="5"/><path d="M149 187 L160 200 L171 187 Z"/></g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 VISION INTRO -->
+  <section class="slide teal">
+    <div class="inner split">
+      <div>
+        <h2 class="anim">A park you can walk into.<br>Rain or shine.</h2>
+        <p class="lede detail">Step off a hot parking lot into a field of green. Coffee and fresh bread in the air. Tables everywhere. Free to walk into, open to everyone — a permanent, public place built to make connection easy.</p>
+        <div class="tags anim d2">The Commons&nbsp; ·&nbsp; The Market&nbsp; ·&nbsp; The Stage&nbsp; ·&nbsp; The Library</div>
+      </div>
+      <div class="motif anim d2">
+        <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="286" cy="40" rx="38" ry="19" fill="#DDCEA5" opacity="0.92"/>
+          <ellipse cx="318" cy="46" rx="26" ry="15" fill="#DDCEA5" opacity="0.92"/>
+          <g stroke="#FAF6EC" stroke-width="3" stroke-linecap="round" opacity="0.85"><line x1="272" y1="60" x2="268" y2="70"/><line x1="292" y1="62" x2="288" y2="72"/><line x1="312" y1="60" x2="308" y2="70"/></g>
+          <g stroke="#FAF6EC" stroke-width="6" fill="none" opacity="0.92" stroke-linecap="round" stroke-linejoin="round"><polyline points="44,112 200,80 356,112"/><line x1="50" y1="112" x2="50" y2="252"/><line x1="350" y1="112" x2="350" y2="252"/></g>
+          <line x1="50" y1="252" x2="350" y2="252" stroke="#DDCEA5" stroke-width="4" opacity="0.6"/>
+          <rect x="96" y="176" width="15" height="62" rx="4" fill="#A58461"/>
+          <circle cx="103" cy="156" r="38" fill="#DDCEA5"/>
+          <circle cx="80" cy="172" r="24" fill="#FAF6EC" opacity="0.92"/>
+          <circle cx="126" cy="170" r="25" fill="#FAF6EC" opacity="0.85"/>
+          <rect x="286" y="188" width="13" height="50" rx="4" fill="#A58461"/>
+          <circle cx="292" cy="172" r="30" fill="#DDCEA5"/>
+          <circle cx="311" cy="182" r="18" fill="#FAF6EC" opacity="0.8"/>
+          <g stroke="#023648" stroke-width="5" stroke-linecap="round"><line x1="178" y1="228" x2="234" y2="228"/><line x1="178" y1="216" x2="234" y2="216"/><line x1="182" y1="228" x2="182" y2="248"/><line x1="230" y1="228" x2="230" y2="248"/><line x1="182" y1="216" x2="182" y2="228"/><line x1="230" y1="216" x2="230" y2="228"/></g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 COMMONS -->
+  <section class="slide paper">
+    <div class="inner split">
+      <div>
+        <div class="eyebrow anim">The Commons</div>
+        <h2 class="anim d1">A green you can<br>just walk onto.</h2>
+        <p class="lede detail">The heart of The Park — an open, turf-covered gathering floor. No membership, no reason needed. Pull up a chair at a game already going, spread out with your kids, or simply sit and be around other people. It's the town square we stopped building.</p>
+      </div>
+      <div class="motif anim d2">
+        <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="28" y="36" width="344" height="228" rx="30" fill="#077990" opacity="0.13"/>
+          <g fill="#023648"><rect x="106" y="70" width="18" height="14" rx="4"/><rect x="106" y="134" width="18" height="14" rx="4"/><rect x="74" y="102" width="14" height="18" rx="4"/><rect x="142" y="102" width="14" height="18" rx="4"/></g>
+          <circle cx="115" cy="111" r="26" fill="#A58461"/>
+          <g fill="#023648"><rect x="211" y="176" width="18" height="14" rx="4"/><rect x="211" y="240" width="18" height="14" rx="4"/><rect x="179" y="208" width="14" height="18" rx="4"/><rect x="247" y="208" width="14" height="18" rx="4"/></g>
+          <circle cx="220" cy="217" r="26" fill="#A58461"/>
+          <g><rect x="250" y="86" width="94" height="42" rx="12" fill="#DDCEA5" stroke="#023648" stroke-width="3"/><rect x="250" y="78" width="94" height="14" rx="7" fill="#A58461"/><rect x="246" y="88" width="12" height="40" rx="6" fill="#A58461"/><rect x="336" y="88" width="12" height="40" rx="6" fill="#A58461"/></g>
+          <g><rect x="52" y="192" width="86" height="40" rx="12" fill="#DDCEA5" stroke="#023648" stroke-width="3"/><rect x="52" y="184" width="86" height="14" rx="7" fill="#A58461"/><rect x="48" y="194" width="12" height="38" rx="6" fill="#A58461"/><rect x="130" y="194" width="12" height="38" rx="6" fill="#A58461"/></g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 MARKET -->
+  <section class="slide brown">
+    <div class="inner split">
+      <div>
+        <div class="eyebrow anim">The Market</div>
+        <h2 class="anim d1">Local makers who<br>teach you their craft.</h2>
+        <p class="lede detail">A ring of small vendor stalls — coffee, fresh bread, handmade goods — run by neighbors, not chains. Vendors don't just sell; each one teaches a class and mentors newcomers. It's the living economy that gives the room its energy and gives people a reason to keep coming back.</p>
+      </div>
+      <div class="motif anim d2">
+        <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g stroke="#FAF6EC" stroke-width="4" opacity="0.85">
+            <rect x="70" y="150" width="90" height="96"/>
+            <rect x="240" y="150" width="90" height="96"/>
+          </g>
+          <path d="M58 150 q57 -46 114 0 z" fill="#DDCEA5"/>
+          <path d="M228 150 q57 -46 114 0 z" fill="#077990"/>
+          <g stroke="#FAF6EC" stroke-width="4" opacity="0.85"><line x1="115" y1="150" x2="115" y2="246"/><line x1="285" y1="150" x2="285" y2="246"/></g>
+          <circle cx="115" cy="200" r="9" fill="#DDCEA5"/><circle cx="285" cy="200" r="9" fill="#DDCEA5"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 STAGE -->
+  <section class="slide navy">
+    <div class="inner split">
+      <div>
+        <div class="eyebrow anim">The Stage</div>
+        <h2 class="anim d1">A place to be seen.</h2>
+        <p class="lede detail">Community theatre, open mics, movie nights, a local band, a kid's first performance. Somewhere the whole room can gather around one shared moment — and where someone who has never been in the spotlight finally gets to stand in it.</p>
+      </div>
+      <div class="motif anim d2">
+        <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="56" y="58" width="288" height="184" rx="10" fill="#FAF6EC" opacity="0.06"/>
+          <polygon points="200,66 152,232 248,232" fill="#DDCEA5" opacity="0.45"/>
+          <path d="M56 58 h64 v168 q-32 16 -64 0 z" fill="#A58461"/>
+          <path d="M344 58 h-64 v168 q32 16 64 0 z" fill="#A58461"/>
+          <path d="M200 150 l7 16 17 2 -12 12 3 17 -15 -9 -15 9 3 -17 -12 -12 17 -2 z" fill="#DDCEA5"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15 LIBRARY -->
+  <section class="slide teal">
+    <div class="inner split">
+      <div>
+        <div class="eyebrow anim">The Game Library</div>
+        <h2 class="anim d1">Hundreds of games,<br>always free to play.</h2>
+        <p class="lede detail">The thing that started it all — a wall of games anyone can pull down and play, with someone always ready to teach the rules. The lowest-pressure way in the world to sit down across from a stranger and, an hour later, get up as friends.</p>
+      </div>
+      <div class="motif anim d2">
+        <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g transform="rotate(-9 150 108)"><rect x="118" y="76" width="64" height="64" rx="14" fill="#FAF6EC"/><g fill="#023648"><circle cx="134" cy="92" r="6"/><circle cx="166" cy="92" r="6"/><circle cx="150" cy="108" r="6"/><circle cx="134" cy="124" r="6"/><circle cx="166" cy="124" r="6"/></g></g>
+          <g transform="rotate(11 236 130)"><rect x="206" y="100" width="60" height="60" rx="13" fill="#DDCEA5"/><g fill="#023648"><circle cx="221" cy="115" r="5.5"/><circle cx="236" cy="130" r="5.5"/><circle cx="251" cy="145" r="5.5"/></g></g>
+          <g fill="#A58461"><circle cx="112" cy="196" r="12"/><path d="M105 202 C102 212 102 216 105 220 L96 250 C93 256 131 256 128 250 L119 220 C122 216 122 212 119 202 Z"/></g>
+          <g fill="#FAF6EC"><circle cx="196" cy="205" r="13"/><path d="M188 212 C185 223 185 227 188 231 L178 264 C175 270 217 270 214 264 L204 231 C207 227 207 223 204 212 Z"/></g>
+          <g fill="#023648"><circle cx="284" cy="198" r="12"/><path d="M277 204 C274 214 274 218 277 222 L268 252 C265 258 303 258 300 252 L291 222 C294 218 294 214 291 204 Z"/></g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 16 FOR THE DISCONNECTED -->
+  <section class="slide navy">
+    <div class="inner">
+      <h2 class="anim">A place for those who feel<br>disconnected from their community.</h2>
+    </div>
+  </section>
+
+  <!-- 17 ASK + QR + LOGO (paper + wlogo) -->
+  <section class="slide paper">
+    <div class="inner split">
+      <div>
+        <img class="final-logo anim" src="assets/a3s-wlogo-tall-transparent-bg.png" alt="Advance Three Spaces">
+        <h2 class="anim d1">Help us open the doors.</h2>
+        <p class="invite-cta detail">Help us give this community a home — so no one has to end up alone in that room.</p>
+        <div class="ty-contact anim d3">Patrick Quinlan &nbsp;·&nbsp; [your email] &nbsp;·&nbsp; Pasco County, Florida</div>
+      </div>
+      <div class="anim d2" style="display:flex;justify-content:center">
+        <div class="qr-card">
+          <div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" shape-rendering="crispEdges"><path stroke="#023648" d="M0 0.5h7m3 0h1m1 0h1m1 0h1m1 0h1m2 0h2m2 0h1m2 0h7M0 1.5h1m5 0h1m2 0h1m2 0h1m2 0h2m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h3m2 0h1m1 0h3m2 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h1m1 0h1m4 0h1m2 0h1m3 0h3m1 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m1 0h1m2 0h2m1 0h3m3 0h2m1 0h1m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m1 0h2m1 0h1m2 0h1m3 0h2m4 0h1m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h2m2 0h1m3 0h1m1 0h5M0 8.5h1m1 0h5m3 0h5m2 0h1m1 0h2m1 0h1m1 0h1m1 0h5M1 9.5h1m1 0h3m2 0h1m2 0h1m1 0h2m1 0h5m2 0h1m2 0h2m1 0h4M0 10.5h4m2 0h3m1 0h1m2 0h3m1 0h1m2 0h1m1 0h1m2 0h2m1 0h1m1 0h2M0 11.5h1m3 0h2m2 0h6m3 0h2m1 0h2m2 0h1m1 0h1m1 0h3m1 0h1M4 12.5h1m1 0h1m2 0h4m1 0h3m3 0h1m1 0h1m1 0h2m1 0h3M1 13.5h3m6 0h3m2 0h1m2 0h1m2 0h1m1 0h1m2 0h2m1 0h4M3 14.5h1m1 0h3m2 0h2m1 0h4m1 0h1m1 0h3m2 0h3m1 0h1m1 0h1M1 15.5h1m1 0h1m1 0h1m3 0h3m3 0h1m5 0h3m1 0h2m2 0h2M0 16.5h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h4m1 0h1m4 0h4m1 0h2m3 0h1M0 17.5h2m1 0h1m1 0h1m3 0h4m1 0h1m1 0h1m1 0h6m2 0h2m1 0h4M4 18.5h1m1 0h1m1 0h2m2 0h4m2 0h1m1 0h2m2 0h5m1 0h2M4 19.5h1m3 0h1m1 0h2m2 0h1m1 0h1m3 0h4m1 0h7M0 20.5h2m1 0h8m1 0h2m4 0h1m3 0h1m1 0h2m1 0h3m1 0h1M0 21.5h1m3 0h1m2 0h1m1 0h2m1 0h2m1 0h2m3 0h7m2 0h1m2 0h1M0 22.5h1m1 0h3m1 0h1m1 0h4m2 0h1m2 0h3m1 0h2m4 0h1m1 0h1m1 0h1M0 23.5h1m1 0h2m3 0h1m1 0h1m1 0h1m1 0h1m2 0h1m2 0h3m1 0h1m1 0h1m2 0h4M0 24.5h1m3 0h1m1 0h2m2 0h4m3 0h1m1 0h1m2 0h1m1 0h6M8 25.5h1m2 0h2m4 0h5m1 0h2m3 0h1m1 0h1m1 0h1M0 26.5h7m3 0h1m4 0h3m3 0h4m1 0h1m1 0h1m1 0h2M0 27.5h1m5 0h1m1 0h1m3 0h1m1 0h1m2 0h3m1 0h1m1 0h2m3 0h3M0 28.5h1m1 0h3m1 0h1m1 0h4m2 0h3m5 0h1m1 0h6m1 0h1M0 29.5h1m1 0h3m1 0h1m1 0h4m1 0h3m2 0h1m5 0h2m2 0h1m1 0h3M0 30.5h1m1 0h3m1 0h1m1 0h4m1 0h4m3 0h2m1 0h2m1 0h2M0 31.5h1m5 0h1m3 0h6m4 0h2m6 0h3M0 32.5h7m1 0h5m1 0h4m2 0h1m1 0h3m1 0h2m3 0h1"/></svg></div>
+          <div class="qr-label"><div class="give">Scan to give</div><div class="url">advancethreespaces.betterworld.org</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="hint" id="hint">Use ← → arrow keys, or swipe</div>
+<div class="nav">
+  <button class="arrow" id="prev" aria-label="Previous">‹</button>
+  <div class="dots" id="dots"></div>
+  <button class="arrow" id="next" aria-label="Next">›</button>
+</div>
+<div class="counter" id="counter"></div>
+
+<script src="config.js"></script>
+<script>
+  const body=document.body, deck=document.getElementById('deck');
+  const dotsWrap=document.getElementById('dots');
+  const bg=document.getElementById('bg');
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let idx=0;
+
+  const MOODS=['#023648','#023648','#023648','#F7F3EA','#A58461','#077990','#023648','#F7F3EA','#023648','#F7F3EA','#077990','#F7F3EA','#A58461','#023648','#077990','#023648','#F7F3EA'];
+  const LIGHT =[false,false,false,true,false,false,false,true,false,true,false,true,false,false,false,false,true];
+  const CONN  =[0.40,0.05,0.04,0.12,0.25,0.50,0.30,0.45,0.60,0.70,0.85,0.90,0.92,0.94,0.97,0.98,1.00];
+
+  // show/hide slides per config.js (a missing/false-less config shows everything)
+  const cfg=(window.SLIDE_CONFIG)||{};
+  const slides=[], M=[], L=[], C=[];
+  [...document.querySelectorAll('.slide')].forEach((s,i)=>{
+    if(cfg[i+1]===false){ s.remove(); return; }
+    slides.push(s); M.push(MOODS[i]); L.push(LIGHT[i]); C.push(CONN[i]);
+  });
+
+  slides.forEach((_,i)=>{
+    const d=document.createElement('div'); d.className='dot'+(i===0?' on':'');
+    d.addEventListener('click',()=>{ if(body.classList.contains('scroll-mode')){slides[i].scrollIntoView({behavior:'smooth'});} else go(i); });
+    dotsWrap.appendChild(d);
+  });
+  const dots=[...dotsWrap.children];
+
+  function animateCounts(slide){
+    slide.querySelectorAll('.count').forEach(el=>{
+      const to=+el.dataset.to, pre=el.dataset.prefix||'', suf=el.dataset.suffix||'';
+      if(reduce){el.textContent=pre+to+suf;return;}
+      const dur=900, t0=performance.now();
+      (function step(t){const k=Math.min(1,(t-t0)/dur);const v=Math.round(to*(1-Math.pow(1-k,3)));el.textContent=pre+v+suf;if(k<1)requestAnimationFrame(step);})(performance.now());
+    });
+  }
+  function render(){
+    if(!slides.length)return;
+    slides.forEach((s,i)=>s.classList.toggle('active',i===idx));
+    dots.forEach((d,i)=>d.classList.toggle('on',i===idx));
+    document.getElementById('counter').textContent=(idx+1)+' / '+slides.length;
+    bg.style.backgroundColor=M[idx];
+    body.classList.toggle('on-light',L[idx]);
+    animateCounts(slides[idx]);
+  }
+  function go(n){ if(body.classList.contains('scroll-mode'))return; idx=Math.max(0,Math.min(slides.length-1,n)); render(); }
+  document.getElementById('next').addEventListener('click',()=>go(idx+1));
+  document.getElementById('prev').addEventListener('click',()=>go(idx-1));
+  document.addEventListener('keydown',e=>{
+    if(body.classList.contains('scroll-mode'))return;
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(idx+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(idx-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  let x0=null;
+  deck.addEventListener('touchstart',e=>{x0=e.changedTouches[0].clientX},{passive:true});
+  deck.addEventListener('touchend',e=>{
+    if(x0===null||body.classList.contains('scroll-mode'))return;
+    const dx=e.changedTouches[0].clientX-x0;
+    if(Math.abs(dx)>50){ dx<0?go(idx+1):go(idx-1); } x0=null;
+  },{passive:true});
+  const mt=document.getElementById('modetoggle');
+  mt.addEventListener('click',()=>{
+    if(body.classList.contains('slides-mode')){ body.classList.remove('slides-mode'); body.classList.add('scroll-mode'); mt.textContent='⇅ Slide view'; }
+    else{ body.classList.add('slides-mode'); body.classList.remove('scroll-mode'); mt.textContent='⇅ Scroll view'; render(); }
+  });
+  setTimeout(()=>{document.getElementById('hint').style.opacity='0';},4200);
+
+  /* generative connection network — converges to one web by the end */
+  const cv=document.getElementById('net'), ctx=cv.getContext('2d');
+  let W,H,DPR,parts=[],raf;
+  function resize(){ DPR=Math.min(2,window.devicePixelRatio||1); W=cv.width=innerWidth*DPR; H=cv.height=innerHeight*DPR; cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px'; }
+  function seed(){ const n=Math.max(36,Math.min(60,Math.round(innerWidth*innerHeight/28000))); parts=[]; for(let i=0;i<n;i++)parts.push({x:Math.random()*W,y:Math.random()*H,vx:(reduce?0:(Math.random()-.5)*0.15*DPR),vy:(reduce?0:(Math.random()-.5)*0.15*DPR)}); }
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    const c=C[idx], light=L[idx], rgb=light?'2,54,72':'221,206,165';
+    const maxD=(40+300*c)*DPR;                 // grows large by the end → single connected web
+    for(const p of parts){ p.x+=p.vx; p.y+=p.vy; if(p.x<0){p.x=0;p.vx*=-1} if(p.x>W){p.x=W;p.vx*=-1} if(p.y<0){p.y=0;p.vy*=-1} if(p.y>H){p.y=H;p.vy*=-1} }
+    for(let i=0;i<parts.length;i++)for(let j=i+1;j<parts.length;j++){
+      const dx=parts[i].x-parts[j].x, dy=parts[i].y-parts[j].y, d=Math.hypot(dx,dy);
+      if(d<maxD){ const a=(1-d/maxD)*0.42*c; if(a>0.004){ ctx.strokeStyle='rgba('+rgb+','+a.toFixed(3)+')'; ctx.lineWidth=DPR; ctx.beginPath();ctx.moveTo(parts[i].x,parts[i].y);ctx.lineTo(parts[j].x,parts[j].y);ctx.stroke(); } }
+    }
+    const dotA=light?0.30:0.5; ctx.fillStyle='rgba('+rgb+','+dotA+')';
+    for(const p of parts){ctx.beginPath();ctx.arc(p.x,p.y,1.8*DPR,0,7);ctx.fill();}
+    raf=requestAnimationFrame(frame);
+  }
+  window.addEventListener('resize',()=>{resize();seed();});
+  resize(); seed(); frame();
+  render();
+</script>
+</body>
+</html>
