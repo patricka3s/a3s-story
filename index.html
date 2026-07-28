@@ -43,6 +43,15 @@
   body.scroll-mode .slide.teal{background:var(--teal)}
   body.scroll-mode .slide.brown{background:var(--brown)}
 
+  /* version number */
+  .version{
+  position:fixed; bottom:7px; right:12px; z-index:40;
+  font-size:10.5px; letter-spacing:.04em;
+  color:rgba(255,255,255,.32);          /* subtle on dark slides */
+  font-variant-numeric:tabular-nums; pointer-events:none;
+}
+body.on-light .version{ color:rgba(2,54,72,.34); }  /* subtle on light slides */
+
   /* dual density: detail hidden in slide mode, shown in scroll */
   .detail{display:none}
   body.scroll-mode .detail{display:block}
@@ -489,7 +498,8 @@
   <button class="arrow" id="next" aria-label="Next">›</button>
 </div>
 <div class="counter" id="counter"></div>
-
+<div class="version">v1.0 · 2026-07-27</div>
+  
 <script src="config.js"></script>
 <script>
   const body=document.body, deck=document.getElementById('deck');
